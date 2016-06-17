@@ -10,6 +10,7 @@
         "validation",
         "dotenv"
     ],
+    "homepage": "https://github.com/philiprehberger/env-validator",
     "authors": [
         {
             "name": "Philip Rehberger"
@@ -32,6 +33,11 @@
         "psr-4": {
             "PhilipRehberger\\EnvValidator\\Tests\\": "tests/"
         }
+    },
+    "scripts": {
+        "test": "vendor/bin/phpunit",
+        "lint": "vendor/bin/pint",
+        "analyse": "vendor/bin/phpstan analyse"
     },
     "minimum-stability": "stable",
     "prefer-stable": true,

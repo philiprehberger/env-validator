@@ -140,13 +140,12 @@ try {
 | `warnings` | `array<string>` | List of warning messages |
 | `toArray()` | `array` | Convert result to array |
 
-## Testing
+## Development
 
 ```bash
 composer install
 vendor/bin/phpunit
 vendor/bin/pint --test
-vendor/bin/phpstan analyse
 ```
 
 ## License
