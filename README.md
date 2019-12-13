@@ -1,4 +1,4 @@
-# Env Validator
+# PHP Env Validator
 
 [![Tests](https://github.com/philiprehberger/env-validator/actions/workflows/tests.yml/badge.svg)](https://github.com/philiprehberger/env-validator/actions/workflows/tests.yml)
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/philiprehberger/env-validator.svg)](https://packagist.org/packages/philiprehberger/env-validator)
