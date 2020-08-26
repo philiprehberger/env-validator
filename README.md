@@ -8,7 +8,7 @@ Validate required environment variables with type checking and defaults.
 
 ## Requirements
 
-- PHP ^8.2
+- PHP 8.2+
 
 ## Installation
 
@@ -99,7 +99,7 @@ try {
 }
 ```
 
-## Supported Types
+### Supported Types
 
 | Type                | Description                                            |
 |---------------------|--------------------------------------------------------|
