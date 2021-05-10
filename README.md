@@ -99,6 +99,45 @@ try {
 }
 ```
 
+### IP Validation
+
+Validate IP addresses with specific version constraints:
+
+```php
+$result = EnvValidator::required(['SERVER_IP', 'GATEWAY_V4', 'GATEWAY_V6'])
+    ->type('SERVER_IP', 'ip')
+    ->type('GATEWAY_V4', 'ipv4')
+    ->type('GATEWAY_V6', 'ipv6')
+    ->validate();
+```
+
+### Custom Validation Rules
+
+Define your own validation logic with a callable:
+
+```php
+$result = EnvValidator::required(['APP_SECRET'])
+    ->custom('APP_SECRET', fn (string $value) => strlen($value) >= 32, 'Secret must be at least 32 characters.')
+    ->validate();
+```
+
+### Enum Validation
+
+Validate that a value matches one of a backed enum's cases:
+
+```php
+enum Environment: string
+{
+    case Production = 'production';
+    case Staging = 'staging';
+    case Development = 'development';
+}
+
+$result = EnvValidator::required(['APP_ENV'])
+    ->enum('APP_ENV', Environment::class)
+    ->validate();
+```
+
 ### Supported Types
 
 | Type                | Description                                            |
@@ -109,6 +148,9 @@ try {
 | `bool`, `boolean`   | `true`, `false`, `1`, `0`, `yes`, `no` (case-insensitive) |
 | `url`               | Valid URL (uses `FILTER_VALIDATE_URL`)                 |
 | `email`             | Valid email (uses `FILTER_VALIDATE_EMAIL`)             |
+| `ip`                | Valid IP address (uses `FILTER_VALIDATE_IP`)           |
+| `ipv4`              | Valid IPv4 address                                     |
+| `ipv6`              | Valid IPv6 address                                     |
 | `json`              | Valid JSON string                                      |
 
 ## API
@@ -127,6 +169,8 @@ try {
 | `optional(array $vars): self` | Add optional variables (warnings only) |
 | `defaults(array $defaults): self` | Set default values for missing variables |
 | `type(string $var, string $type): self` | Add a type rule for a variable |
+| `custom(string $var, callable $validator, string $message = ''): self` | Add a custom validation rule |
+| `enum(string $var, string $enumClass): self` | Validate against a backed enum |
 | `validate(): ValidationResult` | Run validation and return result |
 | `validateOrFail(): void` | Run validation, throw on failure |
 

@@ -1,8 +1,15 @@
 # Changelog
 
-All notable changes to this project will be documented in this file.
+All notable changes to `env-validator` will be documented in this file.
 
 ## [Unreleased]
+
+## [1.1.0] - 2026-03-22
+
+### Added
+- `ip`, `ipv4`, `ipv6` validation types
+- `custom()` method for user-defined validation rules with callable validators
+- `enum()` method for validating environment values against backed enum cases
 
 ## [1.0.2] - 2026-03-17
 

@@ -20,6 +20,12 @@ final class PendingValidation
     /** @var array<string, array<string>> */
     private array $types = [];
 
+    /** @var array<string, array{callable, string}> */
+    private array $customRules = [];
+
+    /** @var array<string, class-string> */
+    private array $enumRules = [];
+
     /**
      * @param  array<string>  $required
      */
@@ -59,6 +65,28 @@ final class PendingValidation
     }
 
     /**
+     * Add a custom validation rule for a specific variable.
+     */
+    public function custom(string $var, callable $validator, string $message = ''): self
+    {
+        $this->customRules[$var] = [$validator, $message];
+
+        return $this;
+    }
+
+    /**
+     * Validate that a variable's value matches a backed enum case.
+     *
+     * @param  class-string  $enumClass
+     */
+    public function enum(string $var, string $enumClass): self
+    {
+        $this->enumRules[$var] = $enumClass;
+
+        return $this;
+    }
+
+    /**
      * Validate and return the result.
      */
     public function validate(): ValidationResult
@@ -77,6 +105,8 @@ final class PendingValidation
             }
 
             $this->validateType($var, $value, $invalid);
+            $this->validateCustom($var, $value, $invalid);
+            $this->validateEnum($var, $value, $invalid);
         }
 
         foreach ($this->optional as $var) {
@@ -89,6 +119,8 @@ final class PendingValidation
             }
 
             $this->validateType($var, $value, $invalid);
+            $this->validateCustom($var, $value, $invalid);
+            $this->validateEnum($var, $value, $invalid);
         }
 
         return new ValidationResult(
@@ -145,6 +177,9 @@ final class PendingValidation
                 'bool', 'boolean' => in_array(strtolower($value), ['true', 'false', '1', '0', 'yes', 'no'], true),
                 'url' => filter_var($value, FILTER_VALIDATE_URL) !== false,
                 'email' => filter_var($value, FILTER_VALIDATE_EMAIL) !== false,
+                'ip' => filter_var($value, FILTER_VALIDATE_IP) !== false,
+                'ipv4' => filter_var($value, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4) !== false,
+                'ipv6' => filter_var($value, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6) !== false,
                 'json' => json_decode($value) !== null || $value === 'null',
                 default => true,
             };
@@ -152,6 +187,56 @@ final class PendingValidation
             if (! $valid) {
                 $invalid[$var] = "Variable '{$var}' failed type validation '{$type}' with value '{$value}'.";
             }
+        }
+    }
+
+    /**
+     * @param  array<string, string>  $invalid
+     */
+    private function validateCustom(string $var, string $value, array &$invalid): void
+    {
+        if (! isset($this->customRules[$var])) {
+            return;
+        }
+
+        [$validator, $message] = $this->customRules[$var];
+
+        if (! $validator($value)) {
+            $invalid[$var] = $message !== ''
+                ? $message
+                : "Variable '{$var}' failed custom validation with value '{$value}'.";
+        }
+    }
+
+    /**
+     * @param  array<string, string>  $invalid
+     */
+    private function validateEnum(string $var, string $value, array &$invalid): void
+    {
+        if (! isset($this->enumRules[$var])) {
+            return;
+        }
+
+        $enumClass = $this->enumRules[$var];
+
+        if (! enum_exists($enumClass)) {
+            $invalid[$var] = "Variable '{$var}' references non-existent enum '{$enumClass}'.";
+
+            return;
+        }
+
+        if (! is_a($enumClass, \BackedEnum::class, true)) {
+            $invalid[$var] = "Variable '{$var}' references non-backed enum '{$enumClass}'.";
+
+            return;
+        }
+
+        $cases = $enumClass::cases();
+        /** @var array<\BackedEnum> $cases */
+        $values = array_map(fn (\BackedEnum $case) => (string) $case->value, $cases);
+
+        if (! in_array($value, $values, true)) {
+            $invalid[$var] = "Variable '{$var}' value '{$value}' is not a valid case of '{$enumClass}'.";
         }
     }
 }
