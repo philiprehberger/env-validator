@@ -4,6 +4,13 @@ All notable changes to `env-validator` will be documented in this file.
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-03-31
+
+### Added
+- Dependency rules: `requiredIf()`, `requiredUnless()`, and `dependsOn()` for conditional variable requirements
+- .env file parsing via `EnvValidator::fromFile()` for validating env files without loading them
+- Environment profiles via `EnvValidator::profile()` and `validateProfile()` for named validation schemas
+
 ## [1.1.1] - 2026-03-31
 
 ### Changed
