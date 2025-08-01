@@ -20,15 +20,19 @@ final class DotEnvParserTest extends TestCase
 
     protected function tearDown(): void
     {
-        $files = glob($this->tmpDir.'/*');
+        $files = glob($this->tmpDir.'/{,.}*', GLOB_BRACE);
 
         if ($files !== false) {
             foreach ($files as $file) {
-                unlink($file);
+                if (is_file($file)) {
+                    unlink($file);
+                }
             }
         }
 
-        rmdir($this->tmpDir);
+        if (is_dir($this->tmpDir)) {
+            rmdir($this->tmpDir);
+        }
     }
 
     private function createEnvFile(string $content): string
