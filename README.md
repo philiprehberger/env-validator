@@ -61,6 +61,15 @@ const env = createEnv(schema, {
 });
 ```
 
+
+## Development
+
+```bash
+npm install
+npm run build
+npm test
+```
+
 ## License
 
 MIT

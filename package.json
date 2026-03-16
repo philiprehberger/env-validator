@@ -1,6 +1,6 @@
 {
   "name": "@philiprehberger/env-validator",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Schema-based environment variable validation with type-safe accessors",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -25,7 +25,8 @@
     "build": "tsup",
     "dev": "tsup --watch",
     "typecheck": "tsc --noEmit",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run build",
+    "test": "node --test"
   },
   "devDependencies": {
     "tsup": "^8.0.0",
