@@ -2,7 +2,7 @@
 
 [![Tests](https://github.com/philiprehberger/env-validator/actions/workflows/tests.yml/badge.svg)](https://github.com/philiprehberger/env-validator/actions/workflows/tests.yml)
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/philiprehberger/env-validator.svg)](https://packagist.org/packages/philiprehberger/env-validator)
-[![License](https://img.shields.io/packagist/l/philiprehberger/env-validator.svg)](https://packagist.org/packages/philiprehberger/env-validator)
+[![License](https://img.shields.io/github/license/philiprehberger/env-validator)](LICENSE)
 
 Validate required environment variables with type checking and defaults. Framework-agnostic, zero dependencies.
 
@@ -146,8 +146,9 @@ try {
 composer install
 vendor/bin/phpunit
 vendor/bin/pint --test
+vendor/bin/phpstan analyse
 ```
 
 ## License
 
-MIT License. See [LICENSE](LICENSE) for details.
+MIT
