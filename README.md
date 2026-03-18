@@ -4,7 +4,7 @@
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/philiprehberger/env-validator.svg)](https://packagist.org/packages/philiprehberger/env-validator)
 [![License](https://img.shields.io/github/license/philiprehberger/env-validator)](LICENSE)
 
-Validate required environment variables with type checking and defaults. Framework-agnostic, zero dependencies.
+Validate required environment variables with type checking and defaults.
 
 ## Requirements
 
