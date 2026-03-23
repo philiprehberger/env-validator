@@ -186,4 +186,189 @@ final class EnvValidatorTest extends TestCase
         $this->assertEmpty($result->missing);
         $this->assertEmpty($result->invalid);
     }
+
+    public function test_type_validation_ip_passes(): void
+    {
+        $this->setEnv('TEST_IP', '192.168.1.1');
+
+        $result = EnvValidator::required(['TEST_IP'])
+            ->type('TEST_IP', 'ip')
+            ->validate();
+
+        $this->assertTrue($result->passed);
+        $this->assertEmpty($result->invalid);
+    }
+
+    public function test_type_validation_ip_passes_with_ipv6(): void
+    {
+        $this->setEnv('TEST_IP', '::1');
+
+        $result = EnvValidator::required(['TEST_IP'])
+            ->type('TEST_IP', 'ip')
+            ->validate();
+
+        $this->assertTrue($result->passed);
+        $this->assertEmpty($result->invalid);
+    }
+
+    public function test_type_validation_ip_fails(): void
+    {
+        $this->setEnv('TEST_IP', 'not-an-ip');
+
+        $result = EnvValidator::required(['TEST_IP'])
+            ->type('TEST_IP', 'ip')
+            ->validate();
+
+        $this->assertFalse($result->passed);
+        $this->assertArrayHasKey('TEST_IP', $result->invalid);
+    }
+
+    public function test_type_validation_ipv4_passes(): void
+    {
+        $this->setEnv('TEST_IP', '10.0.0.1');
+
+        $result = EnvValidator::required(['TEST_IP'])
+            ->type('TEST_IP', 'ipv4')
+            ->validate();
+
+        $this->assertTrue($result->passed);
+        $this->assertEmpty($result->invalid);
+    }
+
+    public function test_type_validation_ipv4_fails_with_ipv6(): void
+    {
+        $this->setEnv('TEST_IP', '::1');
+
+        $result = EnvValidator::required(['TEST_IP'])
+            ->type('TEST_IP', 'ipv4')
+            ->validate();
+
+        $this->assertFalse($result->passed);
+        $this->assertArrayHasKey('TEST_IP', $result->invalid);
+    }
+
+    public function test_type_validation_ipv4_fails_with_invalid(): void
+    {
+        $this->setEnv('TEST_IP', '999.999.999.999');
+
+        $result = EnvValidator::required(['TEST_IP'])
+            ->type('TEST_IP', 'ipv4')
+            ->validate();
+
+        $this->assertFalse($result->passed);
+        $this->assertArrayHasKey('TEST_IP', $result->invalid);
+    }
+
+    public function test_type_validation_ipv6_passes(): void
+    {
+        $this->setEnv('TEST_IP', '2001:0db8:85a3:0000:0000:8a2e:0370:7334');
+
+        $result = EnvValidator::required(['TEST_IP'])
+            ->type('TEST_IP', 'ipv6')
+            ->validate();
+
+        $this->assertTrue($result->passed);
+        $this->assertEmpty($result->invalid);
+    }
+
+    public function test_type_validation_ipv6_fails_with_ipv4(): void
+    {
+        $this->setEnv('TEST_IP', '192.168.1.1');
+
+        $result = EnvValidator::required(['TEST_IP'])
+            ->type('TEST_IP', 'ipv6')
+            ->validate();
+
+        $this->assertFalse($result->passed);
+        $this->assertArrayHasKey('TEST_IP', $result->invalid);
+    }
+
+    public function test_custom_validation_passes(): void
+    {
+        $this->setEnv('TEST_CUSTOM', 'hello-world');
+
+        $result = EnvValidator::required(['TEST_CUSTOM'])
+            ->custom('TEST_CUSTOM', fn (string $value) => str_contains($value, '-'))
+            ->validate();
+
+        $this->assertTrue($result->passed);
+        $this->assertEmpty($result->invalid);
+    }
+
+    public function test_custom_validation_fails(): void
+    {
+        $this->setEnv('TEST_CUSTOM', 'helloworld');
+
+        $result = EnvValidator::required(['TEST_CUSTOM'])
+            ->custom('TEST_CUSTOM', fn (string $value) => str_contains($value, '-'))
+            ->validate();
+
+        $this->assertFalse($result->passed);
+        $this->assertArrayHasKey('TEST_CUSTOM', $result->invalid);
+    }
+
+    public function test_custom_validation_with_custom_message(): void
+    {
+        $this->setEnv('TEST_CUSTOM', 'bad');
+
+        $result = EnvValidator::required(['TEST_CUSTOM'])
+            ->custom('TEST_CUSTOM', fn (string $value) => strlen($value) >= 5, 'Value must be at least 5 characters.')
+            ->validate();
+
+        $this->assertFalse($result->passed);
+        $this->assertSame('Value must be at least 5 characters.', $result->invalid['TEST_CUSTOM']);
+    }
+
+    public function test_custom_validation_with_empty_value(): void
+    {
+        $result = EnvValidator::required(['TEST_CUSTOM_EMPTY'])
+            ->custom('TEST_CUSTOM_EMPTY', fn (string $value) => $value !== '')
+            ->validate();
+
+        $this->assertFalse($result->passed);
+        $this->assertContains('TEST_CUSTOM_EMPTY', $result->missing);
+    }
+
+    public function test_enum_validation_passes(): void
+    {
+        $this->setEnv('TEST_ENV', 'production');
+
+        $result = EnvValidator::required(['TEST_ENV'])
+            ->enum('TEST_ENV', TestEnvironment::class)
+            ->validate();
+
+        $this->assertTrue($result->passed);
+        $this->assertEmpty($result->invalid);
+    }
+
+    public function test_enum_validation_fails(): void
+    {
+        $this->setEnv('TEST_ENV', 'invalid');
+
+        $result = EnvValidator::required(['TEST_ENV'])
+            ->enum('TEST_ENV', TestEnvironment::class)
+            ->validate();
+
+        $this->assertFalse($result->passed);
+        $this->assertArrayHasKey('TEST_ENV', $result->invalid);
+    }
+
+    public function test_enum_validation_is_case_sensitive(): void
+    {
+        $this->setEnv('TEST_ENV', 'Production');
+
+        $result = EnvValidator::required(['TEST_ENV'])
+            ->enum('TEST_ENV', TestEnvironment::class)
+            ->validate();
+
+        $this->assertFalse($result->passed);
+        $this->assertArrayHasKey('TEST_ENV', $result->invalid);
+    }
+}
+
+enum TestEnvironment: string
+{
+    case Production = 'production';
+    case Staging = 'staging';
+    case Development = 'development';
 }
