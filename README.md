@@ -3,6 +3,7 @@
 [![Tests](https://github.com/philiprehberger/env-validator/actions/workflows/tests.yml/badge.svg)](https://github.com/philiprehberger/env-validator/actions/workflows/tests.yml)
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/philiprehberger/env-validator.svg)](https://packagist.org/packages/philiprehberger/env-validator)
 [![License](https://img.shields.io/github/license/philiprehberger/env-validator)](LICENSE)
+[![Sponsor](https://img.shields.io/badge/sponsor-GitHub%20Sponsors-ec6cb9)](https://github.com/sponsors/philiprehberger)
 
 Validate required environment variables with type checking and defaults.
 
