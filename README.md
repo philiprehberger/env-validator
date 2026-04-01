@@ -138,6 +138,61 @@ $result = EnvValidator::required(['APP_ENV'])
     ->validate();
 ```
 
+### Dependency Rules
+
+Make variables conditionally required based on other variables:
+
+```php
+// DB_HOST is only required when DB_DRIVER is set
+$result = EnvValidator::required(['DB_DRIVER', 'DB_HOST'])
+    ->dependsOn('DB_HOST', 'DB_DRIVER')
+    ->validate();
+
+// REDIS_HOST is required when CACHE_DRIVER equals "redis"
+$result = EnvValidator::required(['CACHE_DRIVER', 'REDIS_HOST'])
+    ->requiredIf('REDIS_HOST', 'CACHE_DRIVER', 'redis')
+    ->validate();
+
+// APP_SECRET is required unless APP_ENV equals "local"
+$result = EnvValidator::required(['APP_ENV', 'APP_SECRET'])
+    ->requiredUnless('APP_SECRET', 'APP_ENV', 'local')
+    ->validate();
+```
+
+### .env File Parsing
+
+Validate a `.env` file without loading it into the environment:
+
+```php
+$result = EnvValidator::fromFile('/path/to/.env')
+    ->type('APP_PORT', 'int')
+    ->type('APP_URL', 'url')
+    ->validate();
+```
+
+The parser handles comments, quoted values, multiline values, `export` prefix, and `${VAR}` interpolation.
+
+### Environment Profiles
+
+Register named validation profiles for different environments:
+
+```php
+// Register profiles
+EnvValidator::profile('web', [
+    'APP_URL' => 'url',
+    'APP_PORT' => 'int',
+    'APP_DEBUG' => 'bool',
+]);
+
+EnvValidator::profile('worker', [
+    'QUEUE_CONNECTION' => 'string',
+    'REDIS_HOST' => 'string',
+]);
+
+// Validate against a profile
+$result = EnvValidator::validateProfile('web');
+```
+
 ### Supported Types
 
 | Type                | Description                                            |
@@ -161,6 +216,9 @@ $result = EnvValidator::required(['APP_ENV'])
 |--------|-------------|
 | `required(array $vars): PendingValidation` | Define required environment variables |
 | `schema(array $rules): PendingValidation` | Define variables with type rules |
+| `fromFile(string $path): PendingFileValidation` | Validate a .env file without loading it |
+| `profile(string $name, array $schema): void` | Register a named validation profile |
+| `validateProfile(string $name): ValidationResult` | Validate against a named profile |
 
 ### `PendingValidation`
 
@@ -171,6 +229,9 @@ $result = EnvValidator::required(['APP_ENV'])
 | `type(string $var, string $type): self` | Add a type rule for a variable |
 | `custom(string $var, callable $validator, string $message = ''): self` | Add a custom validation rule |
 | `enum(string $var, string $enumClass): self` | Validate against a backed enum |
+| `dependsOn(string $var, string $dependency): self` | Require variable only when dependency is set |
+| `requiredIf(string $var, string $conditionVar, mixed $value): self` | Require variable when condition equals value |
+| `requiredUnless(string $var, string $conditionVar, mixed $value): self` | Require variable unless condition equals value |
 | `validate(): ValidationResult` | Run validation and return result |
 | `validateOrFail(): void` | Run validation, throw on failure |
 

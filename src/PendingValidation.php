@@ -6,7 +6,7 @@ namespace PhilipRehberger\EnvValidator;
 
 use PhilipRehberger\EnvValidator\Exceptions\EnvValidationException;
 
-final class PendingValidation
+class PendingValidation
 {
     /** @var array<string> */
     private array $required;
@@ -26,12 +26,60 @@ final class PendingValidation
     /** @var array<string, class-string> */
     private array $enumRules = [];
 
+    /** @var array<string, array{type: string, var: string, value?: mixed}> */
+    private array $dependencyRules = [];
+
+    /** @var ?array<string, string> */
+    protected ?array $envSource = null;
+
+    /**
+     * Set a custom environment source for variable resolution.
+     *
+     * @param  array<string, string>  $source
+     */
+    public function setEnvSource(array $source): self
+    {
+        $this->envSource = $source;
+
+        return $this;
+    }
+
     /**
      * @param  array<string>  $required
      */
     public function __construct(array $required)
     {
         $this->required = $required;
+    }
+
+    /**
+     * This variable is only required when the given variable is set.
+     */
+    public function dependsOn(string $var, string $dependency): self
+    {
+        $this->dependencyRules[$var] = ['type' => 'dependsOn', 'var' => $dependency];
+
+        return $this;
+    }
+
+    /**
+     * This variable is required when the given variable equals the given value.
+     */
+    public function requiredIf(string $var, string $conditionVar, mixed $value): self
+    {
+        $this->dependencyRules[$var] = ['type' => 'requiredIf', 'var' => $conditionVar, 'value' => $value];
+
+        return $this;
+    }
+
+    /**
+     * This variable is required unless the given variable equals the given value.
+     */
+    public function requiredUnless(string $var, string $conditionVar, mixed $value): self
+    {
+        $this->dependencyRules[$var] = ['type' => 'requiredUnless', 'var' => $conditionVar, 'value' => $value];
+
+        return $this;
     }
 
     /**
@@ -96,6 +144,10 @@ final class PendingValidation
         $warnings = [];
 
         foreach ($this->required as $var) {
+            if ($this->isDependencySkipped($var)) {
+                continue;
+            }
+
             $value = $this->resolveValue($var);
 
             if ($value === null) {
@@ -145,11 +197,16 @@ final class PendingValidation
         }
     }
 
-    private function resolveValue(string $var): ?string
+    protected function resolveValue(string $var): ?string
     {
-        $value = getenv($var);
+        if ($this->envSource !== null) {
+            $value = $this->envSource[$var] ?? null;
+        } else {
+            $raw = getenv($var);
+            $value = ($raw !== false && $raw !== '') ? $raw : null;
+        }
 
-        if ($value !== false && $value !== '') {
+        if ($value !== null && $value !== '') {
             return $value;
         }
 
@@ -158,6 +215,25 @@ final class PendingValidation
         }
 
         return null;
+    }
+
+    /**
+     * Check if a variable's dependency condition allows it to be skipped.
+     */
+    private function isDependencySkipped(string $var): bool
+    {
+        if (! isset($this->dependencyRules[$var])) {
+            return false;
+        }
+
+        $rule = $this->dependencyRules[$var];
+
+        return match ($rule['type']) {
+            'dependsOn' => $this->resolveValue($rule['var']) === null,
+            'requiredIf' => $this->resolveValue($rule['var']) !== (string) $rule['value'],
+            'requiredUnless' => $this->resolveValue($rule['var']) === (string) $rule['value'],
+            default => false,
+        };
     }
 
     /**
